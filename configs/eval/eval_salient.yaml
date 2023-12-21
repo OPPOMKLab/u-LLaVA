@@ -1,0 +1,46 @@
+model:
+  arch: 'ullava'
+  llm_path: './exp/ullava_7b_stage2'
+  conv_type: 'conv_sep2'
+  lora_r: -1
+
+task:
+  type: image_text_evaluate
+  collator_type: 'segmentation_collator'
+
+processor:
+  clip_image:
+    path: './model_zoo/clip-vit-large-patch14'
+    image_size: 224
+
+eval_dataset:
+   dut_omron:
+     data_type: 'image'
+     image_token_len: 256
+     build_info:
+       anno_dir: './dataset_zoo/ullava/DUT-OMRON.json'
+       image_dir: './dataset_zoo/DUT-OMRON'
+       portion: 1.0
+     vis_processor: 'clip_image'
+
+  duts_te:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/DUTS-TE.json'
+      image_dir: './dataset_zoo/DUTS-TE'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  ecssd:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/ECSSD.json'
+      image_dir: './dataset_zoo/ECSSD'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+training:
+  seed: 42
+  output_dir: ''

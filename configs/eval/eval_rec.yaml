@@ -1,0 +1,93 @@
+model:
+  arch: 'ullava'
+  llm_path: './exp/ullava_7b_stage2'
+  grounding_path: './model_zoo/groundingdino_swint_ogc.pth'
+  conv_type: 'conv_sep2'
+  lora_r: -1
+
+task:
+  type: image_text_evaluate
+  collator_type: 'grounding_collator'
+
+processor:
+  clip_image:
+    path: './model_zoo/clip-vit-large-patch14'
+    image_size: 224
+
+eval_dataset:
+  refcoco_val:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcoco_val.json'
+      image_dir: './dataset_zoo/coco2014'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcoco_testA:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcoco_testA.json'
+      image_dir: './dataset_zoo/coco2014'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcoco_testB:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcoco_testB.json'
+      image_dir: './dataset_zoo/coco2014'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcoco+_val:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcoco+_val.json'
+      image_dir: './dataset_zoo/coco2014'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcoco+_testA:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcoco+_testA.json'
+      image_dir: './dataset_zoo/coco2014'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcoco+_testB:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcoco+_testB.json'
+      image_dir: './dataset_zoo/coco2014'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcocog_val:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcocog_val.json'
+      image_dir: './dataset_zoo/coco2014'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcocog_test:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcocog_test.json'
+      image_dir: './dataset_zoo/coco2014'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+
+training:
+  seed: 42
+  output_dir: ''
