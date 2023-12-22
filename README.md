@@ -89,7 +89,7 @@ Examples
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
+Demo is coming soon.
 
 <!-- Features -->
 
@@ -129,47 +129,54 @@ And please should install requirements of GroundingDINO for Grounding. Otherwise
 Why do these?
 1. install requirements: `pip install -r requirements.txt`
 2. build cuda core for GroundingDINO: `cd ./models/GroundingDINO && ./install.sh && cd ../..`, 
-  if not may arise `UserWarning: Failed to load custom C++ ops. Running on CPU mode Only!
+    if not may arise `UserWarning: Failed to load custom C++ ops. Running on CPU mode Only!
     warnings.warn("Failed to load custom C++ ops. Running on CPU mode Only!")`
-
-  ```text
-  # save to requirements.txt
-  polyglot
-  shortuuid
-  fire
-  fastapi
-  uvicorn
-  gradio
-  omegaconf
-  decord
-  einops
-  ninja
-  accelerate
-  torch==1.13.1
-  torchvision==0.14.1
-  transformers==4.29.1
-  tokenizers==0.13.3
-  deepspeed==0.8.3
-  imageio==2.31.1
-  SentencePiece
-  pydantic==1.10.12
-  peft==0.4.0
-  yacs
-  addict
-  yapf
-  supervision
-  opencv-python-headless==4.2.0.34
-  ```
 
 <!-- Datasets -->
 
 ## Datasets
 
+**Annotation download link**: [ullava modified annotations][ullava_database], [LLaVA pretrain annotations][https://huggingface.co/datasets/liuhaotian/LLaVA-CC3M-Pretrain-595K/blob/main/chat.json] and [LLaVA finetuning annotaions][https://huggingface.co/datasets/liuhaotian/LLaVA-Instruct-150K]
+
+**Image storage** (download link can be found in the table):
+
+```
+image_root
+├─ade20k
+│  ├─annotations
+│  └─images
+├─coco2014
+│  ├─test2014
+│  ├─train2014
+│  └─val2014
+├─coco2017
+│  ├─annotations
+│  ├─train2017
+│  └─val2017
+├─cocostuff
+│  ├─train2017
+│  └─val2017
+├─LLaVA-CC3M-Pretrain-595K
+│  └─images
+├─saiapr_tc-12
+│  ├─00
+│  └─01
+└─vlpart
+    ├─paco
+    │  └─annotations
+    └─pascal-part
+        ├─Annotations_Part
+        ├─examples
+        └─VOCdevkit
+```
+
+where ade20k is extracted from ADEChallengeData2016.zip and cocostuff is extracted from stuffthingmaps_trainval2017.zip, respectively.
+
 ### Stage I: Pre-training
 | Dataset | Images/Videos | Annotations |
 | :-----| ----: | :----: |
 | LLaVA CC3M | [LLaVA-CC3M-Pretrain-595K/image.zip][llava_cc3m_image] | [chat.json][llava_cc3m_anno] |
-| TGIF | [tgif][tgif] | [ullava_tgif.json][ullava_database]  |
+| TGIF | [tgif][tgif] | coming soon |
 
 Note that TGIF videos should be downloaded by the url in `data/tgif-v1.0.tsv`.
 
@@ -177,25 +184,28 @@ Note that TGIF videos should be downloaded by the url in `data/tgif-v1.0.tsv`.
 | Dataset | Images | Annotations |
 | :-----| ----: | :----: |
 | LLaVA Instruction 150K | [coco2017][coco2014_images] | [llava_instruct_150k.json][llava_instruct_150k] |
-| RefCOCO | [coco2014][coco2014_images] | [ullava_refcoco.json][ullava_database] |
-| RefCOCOg | [coco2014][coco2014_images] | [ullava_refcocog.json][ullava_database] |
-| RefCOCO+ | [coco2014][coco2014_images] | [ullava_refcoco+.json][ullava_database] |
-| RefCLEF | [saiapr_tc-12][saiapr_tc-12] | [ullava_refclef.json][ullava_database] |
-| ADE20K | [ade20k][ade20k] | [ullava_ade20k.json][ullava_database] |
-| COCO Stuff | [cocostuff][coco_stuff] | [ullava_cocostuff.json][ullava_database]  |
-| VOC2010 | [voc2010][voc2010] | [ullava_pascal_part.json][ullava_database] |
-| PACO LVIS  | [paco][paco] | [ullava_paco_lvis.json][ullava_database] |
-| Salient 15K | [salient15k][ullava_database] | [ullava_salient15k.json][ullava_database] |
+| RefCOCO | [coco2014][coco2014_images] | [refcoco_train.json][ullava_database] |
+| RefCOCOg | [coco2014][coco2014_images] | [refcocog_train.json][ullava_database] |
+| RefCOCO+ | [coco2014][coco2014_images] | [refcoco+_train.json][ullava_database] |
+| RefCLEF | [saiapr_tc-12][saiapr_tc-12] | [refclef_train.json][ullava_database] |
+| ADE20K | [ade20k][ade20k] | [ade20k.json][ullava_database] |
+| COCO Stuff | [cocostuff][coco_stuff] | [cocostuff.json][ullava_database]  |
+| VOC2010 | [voc2010][voc2010] | [pascal_part.json][ullava_database] |
+| PACO LVIS  | [paco][paco] | [paco_lvis.json][ullava_database] |
+| Salient 15K | coming soon | coming soon |
+
+
 
 Dataset config example
+
 ```yaml
 dataset:
   llava:
     data_type: 'image'
     image_token_len: 256
     build_info:
-      anno_dir: './data_annotations/llava_instruct_150k.json'
-      image_dir: './coco2017/train2017'
+      anno_dir: '/path_to_annotations/llava_instruct_150k.json'
+      image_dir: '/path_to_image_root/coco2017/train2017'
       portion: 1.0
     vis_processor: 'clip_image'
 
@@ -203,8 +213,8 @@ dataset:
     data_type: 'image'
     image_token_len: 256
     build_info:
-      anno_dir: './annotations/ullava_refcoco+_train.json'
-      image_dir: './coco2014'
+      anno_dir: '/path_to_annotations/refcoco+_train.json'
+      image_dir: '/path_to_image_root/coco2014'
       template_root: './datasets/templates/SEG.json'
       portion: 1.0
     vis_processor: 'clip_image'
@@ -324,9 +334,8 @@ Distributed under the Apache License. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- Citation -->
+
 ## Citation
 
 ```
@@ -377,16 +386,15 @@ See the [open issues](https://github.com/OPPOMKLab/u-LLaVA/issues) for a full li
 [llava_instruct_150k]: https://huggingface.co/datasets/liuhaotian/LLaVA-Instruct-150K
 [coco2014_images]: https://cocodataset.org/#download
 [coco2017_images]: https://cocodataset.org/#download
-[ullava_database]: https://ullava
+[ullava_database]: https://huggingface.co/datasets/jinxu95/ullava/tree/main
 [saiapr_tc-12]: https://web.archive.org/web/20220515000000/http://bvisionweb1.cs.unc.edu/licheng/referit/data/images/saiapr_tc-12.zip
 [ade20k]: http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip
 [coco_stuff]: http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval2017.zip
-[voc2010]: https://github.com/facebookresearch/VLPart/tree/main/datasets#pascal-part
-[paco]: https://github.com/facebookresearch/paco/tree/main#dataset-setup
+[voc2010]: http://host.robots.ox.ac.uk/pascal/VOC/voc2010/VOCtrainval_03-May-2010.tar
+[paco]: https://dl.fbaipublicfiles.com/paco/annotations/paco_lvis_v1.zip
 [tgif]: https://github.com/raingo/TGIF-Release/tree/master/data
 
 [llama2_7b]: https://huggingface.co/meta-llama/Llama-2-7b-hf
 [vicuna_7b_v1.1]: https://huggingface.co/lmsys/vicuna-7b-v1.1
 [sam_vit_h]: https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
 [groundingdino_swint_ogc]: https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
-# u-LLaVA
