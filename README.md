@@ -136,7 +136,7 @@ Why do these?
 
 ## Datasets
 
-**Annotation download link**: [ullava modified annotations][ullava_database], [LLaVA pretrain annotations][https://huggingface.co/datasets/liuhaotian/LLaVA-CC3M-Pretrain-595K/blob/main/chat.json] and [LLaVA finetuning annotaions][https://huggingface.co/datasets/liuhaotian/LLaVA-Instruct-150K]
+**Annotation download link**: [ullava modified annotations][ullava_database], [LLaVA pretrain annotations][llava_cc3m_anno] and [LLaVA finetuning annotaions][llava_instruct_150k]
 
 **Image storage** (download link can be found in the table):
 
