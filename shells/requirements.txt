@@ -13,7 +13,7 @@ omegaconf
 decord
 einops
 ninja
-accelerate
+accelerate==0.22.0
 torch==1.13.1
 torchvision==0.14.1
 transformers==4.29.1
