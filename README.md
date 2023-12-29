@@ -24,12 +24,13 @@
     <a href="https://github.com/OPPOMKLab/u-LLaVA"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/OPPOMKLab/u-LLaVA">View Demo</a>
+    <a href="https://arxiv.org/abs/2311.05348">Paper</a>
     ·
     <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Report Bug</a>
     ·
     <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Request Feature</a>
   </p>
+
 </div>
 
 
