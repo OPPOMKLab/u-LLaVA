@@ -196,7 +196,7 @@ image_root
 | Dataset | Images/Videos | Annotations |
 | :-----| ----: | :----: |
 | LLaVA CC3M | [LLaVA-CC3M-Pretrain-595K/image.zip][llava_cc3m_image] | [chat.json][llava_cc3m_anno] |
-| TGIF | [TGIF - Quark Drive ][tgif_quark] \| [TGIF - Google Drive][tgif_google] | coming soon |
+| TGIF | [TGIF - Quark Drive ][tgif_quark] \| [TGIF - Google Drive][tgif_google] | [tgif.json][ullava_database] |
 
 请注意：我们对TGIF数据集进行了重命名并剔除了无效样本，以方便训练，但请大家遵循原始TGIF数据集的LICENSE。
 

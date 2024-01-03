@@ -193,7 +193,7 @@ where ade20k is extracted from ADEChallengeData2016.zip and cocostuff is extract
 | Dataset | Images/Videos | Annotations |
 | :-----| ----: | :----: |
 | LLaVA CC3M | [LLaVA-CC3M-Pretrain-595K/image.zip][llava_cc3m_image] | [chat.json][llava_cc3m_anno] |
-| TGIF | [TGIF - Quark Drive ][tgif_quark] \| [TGIF - Google Drive][tgif_google] |         coming soon          |
+| TGIF | [TGIF - Quark Drive ][tgif_quark] \| [TGIF - Google Drive][tgif_google] | [tgif.json][ullava_database] |
 
 Note: We have renamed the TGIF dataset and removed invalid samples to facilitate training, but please follow the original LICENSE.
 
