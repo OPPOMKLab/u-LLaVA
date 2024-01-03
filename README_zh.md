@@ -290,7 +290,7 @@ configs/train/ullava_stage2.yaml (for non lora)
 ```shell
 ./shells/finetune.sh
 ```
-或者单GPU LoRA微调：python train_ullava_core.py --cfg_path './configs/train/ullava_stage2_lora.yaml'` .
+或者单GPU LoRA微调：python train_ullava.py --cfg_path './configs/train/ullava_stage2_lora.yaml'` .
 
 
 ### 常见问题
