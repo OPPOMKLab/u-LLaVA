@@ -19,14 +19,14 @@
 <h3 align="center">u-LLaVA: Unifying Multi-Modal Tasks via Large Language Model</h3>
 
   <p align="center">
-    Multi-modal multi task LLM
+    多模态多任务LLM
     <br />
-     <a href="https://github.com/OPPOMKLab/u-LLaVA/blob/main/README.md"><strong> Documentation</strong></a>
+    <a href="https://github.com/OPPOMKLab/u-LLaVA/blob/main/README.md"><strong> Documentation</strong></a>
       |
     <a href="https://github.com/OPPOMKLab/u-LLaVA/blob/main/README_zh.md"><strong> 中文文档 </strong></a>
     <br />
     <br />
-    <a href="https://arxiv.org/abs/2311.05348">Paper</a>
+    <a href="https://arxiv.org/abs/2311.05348">论文</a>
     ·
     <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Report Bug</a>
     ·
@@ -43,23 +43,23 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#about-the-project">About The Project</a>
+      <a href="#about-the-project">关于项目</a>
       <ul>
-        <li><a href="#features">Features</a></li>
+        <li><a href="#features">特色</a></li>
       </ul>
     </li>
     <li>
-      <a href="#getting-started">Getting Started</a>
+      <a href="#getting-started">开始</a>
       <ul>
-        <li><a href="#requirements">Requirements</a></li>
-        <li><a href="#datasets">Datasets</a></li>
-        <li><a href="#training">Training</a></li>
-        <li><a href="#evaluation">Evaluation</a></li>
+        <li><a href="#requirements">配置要求</a></li>
+        <li><a href="#datasets">数据集</a></li>
+        <li><a href="#training">训练</a></li>
+        <li><a href="#evaluation">测试</a></li>
       </ul>
     </li>
     <li><a href="#license">License</a></li>
-    <li><a href="#citation">Citation</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <li><a href="#citation">引用</a></li>
+    <li><a href="#acknowledgments">致谢</a></li>
   </ol>
 </details>
 
@@ -67,15 +67,15 @@
 
 <!-- ABOUT THE PROJECT -->
 
-## About The Project
-Structure:
+## 关于项目
+模型结构:
 
 <div align="center">
     <img src=./images/llm.png width=70%>
 </div>
 
 
-Examples
+样例：
 <div align="center">
     <img src=./images/exp1.png width=70%>
 </div>
@@ -92,22 +92,22 @@ Examples
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-Demo is coming soon.
+Demo即将上线。
 
 <!-- Features -->
 
-## Features
+## 特色
 
-**Code**
+**代码**
 
-- [x] Epoch Quantitative Evaluation
+- [x] 训练Epoch量化测试
 
-  - [x] Compute metrics
+  - [x] 自定义Compute metrics，适配transformers
 
-- [x] Mixed Datasets
+- [x] 混合数据集
 
-  - [x] Dataset scale specification (portion)
-  - [x] Text, Image-Text, Video-Text
+  - [x] 数据集比例指定
+  - [x] 文本数据集、图文数据集、视频文数据集
 
 - [x] DeepSpeed
 
@@ -115,47 +115,50 @@ Demo is coming soon.
 
   
 
-**Task**
+**任务**
 
-- [x] Visual Understanding
-  - [x] Image Captioning
-  - [x] Video Captioning
-  - [x] Visual Question Answering (VQA)
-- [x] Visual Segmentation
-  - [x] Referring Expression Segmentation (RES)
-  - [x] Salient Object Segmentation
-  - [x] Semantic Segmentation
-- [x] Visual Grounding
-    - [x] Referring Expression Comprehension (REC)
+- [x] 视觉理解
+  - [x] 图Captioning
+  - [x] 视频Captioning
+  - [x] 视觉问答 (VQA)
+- [x] 分割
+  - [x] 指代分割 (RES)
+  - [x] 显著性目标分割
+  - [x] 语义分割
+- [x] 视觉Grounding
+    - [x] 指代理解 (REC)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 
-## Getting Started
+## 开始
 
 <!-- Requirements -->
 
-### Requirements
+### 配置要求
 
-Run the following commands in terminal:
+终端运行以下命令:
 ```shell
 pip install -r ./shells/requirements.txt
 cd ./models/GroundingDINO && ./install.sh && cd ../..
 ```
-Why do these?
-1. install requirements: `pip install -r requirements.txt`
-2. build cuda core for GroundingDINO: `cd ./models/GroundingDINO && ./install.sh && cd ../..`, 
-    if not may arise `UserWarning: Failed to load custom C++ ops. Running on CPU mode Only!
+指令意义：
+1. 安装ullava所需库: `pip install -r requirements.txt`
+2. 构建GroundingDINO cuda依赖库: `cd ./models/GroundingDINO && ./install.sh && cd ../..`, 
+    如果之前未配置，可能会出现以下告警 `UserWarning: Failed to load custom C++ ops. Running on CPU mode Only!
     warnings.warn("Failed to load custom C++ ops. Running on CPU mode Only!")`
+3. 如果GroundingDINO出现问题，可以关闭掉代码中所有GroundingDINO相关模块，以纯分割形式运行
 
 <!-- Datasets -->
 
-## Datasets
+## 数据集
 
-**Annotation download link**: [ullava modified annotations][ullava_database], [LLaVA pretrain annotations][llava_cc3m_anno] and [LLaVA finetuning annotaions][llava_instruct_150k]
+我们对使用到的数据集的标注文件进行了重构，方便训练和理解，请下载我们重构后的标注文件。
 
-**Image storage** (download link can be found in the table):
+**下载链接**: [ullava modified annotations][ullava_database], [LLaVA pretrain annotations][llava_cc3m_anno] and [LLaVA finetuning annotaions][llava_instruct_150k]
+
+**训练图像存储示例** (后表中有图像文件下载链接):
 
 ```
 image_root
@@ -187,17 +190,17 @@ image_root
         └─VOCdevkit
 ```
 
-where ade20k is extracted from ADEChallengeData2016.zip and cocostuff is extracted from stuffthingmaps_trainval2017.zip, respectively.
+其中 ade20k 由 ADEChallengeData2016.zip 解压并重命名，cocostuff由 stuffthingmaps_trainval2017.zip解压并重命名。
 
-### Stage I: Pre-training
+### Stage I: 预训练
 | Dataset | Images/Videos | Annotations |
 | :-----| ----: | :----: |
 | LLaVA CC3M | [LLaVA-CC3M-Pretrain-595K/image.zip][llava_cc3m_image] | [chat.json][llava_cc3m_anno] |
-| TGIF | [TGIF - Quark Drive ][tgif_quark] \| [TGIF - Google Drive][tgif_google] |         coming soon          |
+| TGIF | [TGIF - Quark Drive ][tgif_quark] \| [TGIF - Google Drive][tgif_google] | coming soon |
 
-Note: We have renamed the TGIF dataset and removed invalid samples to facilitate training, but please follow the original LICENSE.
+请注意：我们对TGIF数据集进行了重命名并剔除了无效样本，以方便训练，但请大家遵循原始TGIF数据集的LICENSE。
 
-### Stage II: Fine-tuning
+### Stage II: 微调
 | Dataset | Images | Annotations |
 | :-----| ----: | :----: |
 | LLaVA Instruction 150K | [coco2017][coco2014_images] | [llava_instruct_150k.json][llava_instruct_150k] |
@@ -211,9 +214,7 @@ Note: We have renamed the TGIF dataset and removed invalid samples to facilitate
 | PACO LVIS  | [paco][paco] | [paco_lvis.json][ullava_database] |
 | Salient 15K | coming soon | coming soon |
 
-
-
-Dataset config example
+数据集配置示例
 
 ```yaml
 dataset:
@@ -237,16 +238,13 @@ dataset:
     vis_processor: 'clip_image'
 ```
 
-Note:
-1. We re-organize most of the dataset annotations for easier training, but all of us must follow the rules that the original datasets require.
-
 <!-- Training -->
 
-## Training
+## 训练
 
-### Stage I: Pre-training
+### Stage I: 预训练
 
-1. Prepare Open-Source LLaMA models
+1. 准备开源模型
 
 | Foundation model | Version | Path |
 | :-----| ----: | :----: |
@@ -257,69 +255,68 @@ Note:
 
 *Note:*
 
-*- LLaMA2 is trained with `bf16`, convergence error may happen when stage 1 training with `fp16`.*
+*- LLaMA2 由 `bf16`训练, 如果以 `fp16`进行一阶段训练时，可能出现收敛错误.*
 
-*- The default `tokenizer.legacy` of Llama-2 is False, and may rise tokenization mismatch error with some conversation
-template.* 
+*- LLaMA2 默认的 `tokenizer.legacy` 为 False, 因此使用某些 conversation 模板时可能出现编解码错误.* 
 
-*- Errata: The base LLM used in the paper is `Vicuna-v1.1`, not LLaMA2. Sorry about the mistake.*
+*- 更正: 论文中使用的基模型为 `Vicuna-v1.1`, 而不是LLaMA2，非常抱歉出现了笔误.*
 
 
-2. Prepare datasets
-3. Set config in 
+2. 准备数据集
+3. 设置配置文件
 ```text
 configs/train/ullava_core_stage1.yaml
 ```
-Note set all datasets path or output path according to your experiments.
-4. Train Stage I with multi GPUs
+请注意配置好所有图像路径和模型路径.
+4. 多GPU训练Stage I
 ```shell
 ./shells/pretrain.sh
 ```
-or `python train_ullava_core.py --cfg_path './configs/train/ullava_core_stage1.yaml'` for 1 GPU.
+或者单 GPU `python train_ullava_core.py --cfg_path './configs/train/ullava_core_stage1.yaml'` .
 
-The first stage with 4 A100 80G with bf16 costs ~6hours for 1 epoch. Then you can find the trained model at the output_dir, 
-for example, './exp/ullava_core_7b'
+第一阶段使用 4 个 A100 80G 和 bf16，1 个周期花费约 6 小时。 然后你可以在output_dir找到训练好的模型，
+例如，“./exp/ullava_core_7b”
 
-### Stage II: Fine-tuning
+### Stage II: 微调
 
-After Stage I training finished, we can go through the following step, that is, fine-tuning.
-1. Prepare datasets
-2. Set config in
+Stage I 完成之后，即可以进行下一阶段的训练，
+1. 准备数据集
+2. 设置配置文件
 ```text
 configs/train/ullava_stage2_lora.yaml (for lora)
 configs/train/ullava_stage2.yaml (for non lora)
 ```
-3. Train Stage II with multi GPUs
+3. 多GPU训练
 ```shell
 ./shells/finetune.sh
 ```
-or `python train_ullava_core.py --cfg_path './configs/train/ullava_stage2_lora.yaml'` for 1 GPU.
+或者单GPU LoRA微调：python train_ullava_core.py --cfg_path './configs/train/ullava_stage2_lora.yaml'` .
 
 
-### Common Question
-Q1: What conv_tpye used in training?
+### 常见问题
+Q1: 使用了哪种conversation 模板?
 
 A1: Stage I: 'conv_simple'. Stage II: 'conv_sep2'
 
-Q2: When LoRA used?
+Q2: 什么时候使用LoRA?
 
-A2: Stage I: We have not used in this stage. Stage II: According to your devices.
+A2: Stage I: 我们未使用. Stage II: 根据您的设备.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- Evaluation -->
 
-## Evaluation
+## 测试
 
-### Batch evaluation
+### 批量量化测试
 
-1. Set config
+1. 配置文件
 ```text
 configs/eval/eval_res.ymal (for RES task)
 configs/eval/eval_rec.ymal (for REC task)
 configs/eval/eval_salient.ymal (for Salinet segmentation task)
 ```
-2. Run
+2. 运行
 ```text
 python evaluation/eval_ullava.py --cfg_path './configs/eval/eval_res.yaml' (for RES)
 python evaluation/eval_ullava_grounding.py --cfg_path './configs/eval/eval_rec.yaml' (for REC)
@@ -332,9 +329,9 @@ python evaluation/eval_ullava.py --cfg_path './configs/eval/eval_salient.yaml' (
 
 <!-- Qualitative Evaluation -->
 
-### Qualitative inference
+### 定性测试
 
-Modify the parser in the `evaluation/inference_ullava_core.py` and `evaluation/inference_ullava.py` for stage I and stage II, respectively.
+调整 `evaluation/inference_ullava_core.py` 和`evaluation/inference_ullava.py` 的argparser配置，进行一阶段和二阶段的定性测试
 
 ```text
 python evaluation/eval_ullava.py
@@ -343,8 +340,8 @@ python evaluation/eval_ullava_grounding.py
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the Apache License. See `LICENSE` for more information.
@@ -377,7 +374,7 @@ Distributed under the Apache License. See `LICENSE` for more information.
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
-We sincerely thank the open source community for their contributions. And this work is sponsored by Shanghai Pujiang Program (23PJ1421800).
+由衷感谢以下开源工作的贡献，且本工作由上海市白玉兰浦江人才计划支持 (项目编号：23PJ1421800)。
 
 * [LLaVA](https://github.com/haotian-liu/LLaVA)
 * [LISA](https://github.com/dvlab-research/LISA)
