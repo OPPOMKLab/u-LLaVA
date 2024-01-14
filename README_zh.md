@@ -130,6 +130,14 @@ Demo即将上线。
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- Models -->
+
+## 模型开源
+
+| Models  |            Images/Videos |
+| :------ | -----------------------: |
+| u-LLaVA | [uLLaVA Stage 2][ullava] |
+
 <!-- GETTING STARTED -->
 
 ## 开始
@@ -196,7 +204,7 @@ image_root
 | Dataset | Images/Videos | Annotations |
 | :-----| ----: | :----: |
 | LLaVA CC3M | [LLaVA-CC3M-Pretrain-595K/image.zip][llava_cc3m_image] | [chat.json][llava_cc3m_anno] |
-| TGIF | [TGIF - Quark Drive ][tgif_quark] \| [TGIF - Google Drive][tgif_google] | [tgif.json][ullava_database] |
+| TGIF | [TGIF - Quark Drive ][tgif_quark] | [tgif.json][ullava_database] |
 
 请注意：我们对TGIF数据集进行了重命名并剔除了无效样本，以方便训练，但请大家遵循原始TGIF数据集的LICENSE。
 
@@ -392,9 +400,9 @@ See the [open issues](https://github.com/OPPOMKLab/u-LLaVA/issues) for a full li
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [llava_cc3m_image]: https://huggingface.co/datasets/liuhaotian/LLaVA-CC3M-Pretrain-595K/blob/main/images.zip
 [llava_cc3m_anno]: https://huggingface.co/datasets/liuhaotian/LLaVA-CC3M-Pretrain-595K/blob/main/chat.json
 [llava_instruct_150k]: https://huggingface.co/datasets/liuhaotian/LLaVA-Instruct-150K
@@ -406,10 +414,9 @@ See the [open issues](https://github.com/OPPOMKLab/u-LLaVA/issues) for a full li
 [coco_stuff]: http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval2017.zip
 [voc2010]: http://host.robots.ox.ac.uk/pascal/VOC/voc2010/VOCtrainval_03-May-2010.tar
 [paco]: https://dl.fbaipublicfiles.com/paco/annotations/paco_lvis_v1.zip
-[tgf_google]: https://coming_soon
 [tgif_quark]: https://pan.quark.cn/s/4440590bceed
 [llama2_7b]: https://huggingface.co/meta-llama/Llama-2-7b-hf
 [vicuna_7b_v1.1]: https://huggingface.co/lmsys/vicuna-7b-v1.1
 [sam_vit_h]: https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
 [groundingdino_swint_ogc]: https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
-[tgif_google]: 
+[ullava]: https://huggingface.co/jinxu95/ullava

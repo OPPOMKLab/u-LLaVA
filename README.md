@@ -130,6 +130,16 @@ Demo is coming soon.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- Models -->
+
+## Model Release
+
+| Models  |            Images/Videos |
+| :------ | -----------------------: |
+| u-LLaVA | [uLLaVA Stage 2][ullava] |
+
+
+
 <!-- GETTING STARTED -->
 
 ## Getting Started
@@ -193,7 +203,7 @@ where ade20k is extracted from ADEChallengeData2016.zip and cocostuff is extract
 | Dataset | Images/Videos | Annotations |
 | :-----| ----: | :----: |
 | LLaVA CC3M | [LLaVA-CC3M-Pretrain-595K/image.zip][llava_cc3m_image] | [chat.json][llava_cc3m_anno] |
-| TGIF | [TGIF - Quark Drive ][tgif_quark] \| [TGIF - Google Drive][tgif_google] | [tgif.json][ullava_database] |
+| TGIF | [TGIF - Quark Drive ][tgif_quark] | [tgif.json][ullava_database] |
 
 Note: We have renamed the TGIF dataset and removed invalid samples to facilitate training, but please follow the original LICENSE.
 
@@ -409,10 +419,10 @@ See the [open issues](https://github.com/OPPOMKLab/u-LLaVA/issues) for a full li
 [coco_stuff]: http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval2017.zip
 [voc2010]: http://host.robots.ox.ac.uk/pascal/VOC/voc2010/VOCtrainval_03-May-2010.tar
 [paco]: https://dl.fbaipublicfiles.com/paco/annotations/paco_lvis_v1.zip
-[tgf_google]: https://coming_soon
 [tgif_quark]: https://pan.quark.cn/s/4440590bceed
 [llama2_7b]: https://huggingface.co/meta-llama/Llama-2-7b-hf
 [vicuna_7b_v1.1]: https://huggingface.co/lmsys/vicuna-7b-v1.1
 [sam_vit_h]: https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
 [groundingdino_swint_ogc]: https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
-[tgif_google]: 
+[ullava]:  https://huggingface.co/jinxu95/ullava
+
