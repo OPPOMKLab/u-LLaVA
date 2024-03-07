@@ -22,15 +22,15 @@
     Multi-modal multi task LLM
     <br />
      <a href="https://github.com/OPPOMKLab/u-LLaVA/blob/main/README.md"><strong> Documentation</strong></a>
-      |
-    <a href="https://github.com/OPPOMKLab/u-LLaVA/blob/main/README_zh.md"><strong> 中文文档 </strong></a>
+<!--       | -->
+<!--     <a href="https://github.com/OPPOMKLab/u-LLaVA/blob/main/README_zh.md"><strong> 中文文档 </strong></a> -->
     <br />
     <br />
-    <a href="https://arxiv.org/abs/2311.05348">Paper</a>
+<!--     <a href="https://arxiv.org/abs/2311.05348">Paper</a> -->
     ·
-    <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Report Bug</a>
+<!--     <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Report Bug</a> -->
     ·
-    <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Request Feature</a>
+<!--     <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Request Feature</a> -->
   </p>
 
 </div>
@@ -363,6 +363,7 @@ Distributed under the Apache License. See `LICENSE` for more information.
 
 <!-- Citation -->
 
+<!--
 ## Citation
 
 ```
@@ -373,6 +374,7 @@ Distributed under the Apache License. See `LICENSE` for more information.
   year={2023}
 }
 ```
+-->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -387,7 +389,10 @@ Distributed under the Apache License. See `LICENSE` for more information.
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
-We sincerely thank the open source community for their contributions. And this work is sponsored by Shanghai Pujiang Program (23PJ1421800).
+We sincerely thank the open source community for their contributions. 
+<!-- 
+And this work is sponsored by Shanghai Pujiang Program (23PJ1421800).
+-->
 
 * [LLaVA](https://github.com/haotian-liu/LLaVA)
 * [LISA](https://github.com/dvlab-research/LISA)
@@ -401,7 +406,9 @@ We sincerely thank the open source community for their contributions. And this w
 
 
 
+<!-- 
 See the [open issues](https://github.com/OPPOMKLab/u-LLaVA/issues) for a full list of proposed features (and known issues).
+-->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
