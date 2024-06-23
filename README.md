@@ -48,6 +48,7 @@
         <li><a href="#features">Features</a></li>
       </ul>
     </li>
+    <li><a href="#Results">Results</a></li>
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
@@ -62,6 +63,7 @@
     <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
+
 
 
 
@@ -140,7 +142,43 @@ Demo is coming soon.
 
 
 
-<!-- GETTING STARTED -->
+<!-- RESULTS -->
+
+## RESULTS 
+
+### RES
+
+<div align="center">
+    <img src=./images/res.png width=60%>
+</div>
+
+### REC
+
+<div align="center">
+    <img src=./images/rec.png width=60%>
+</div>
+
+### SALIENT
+
+<div align="center">
+    <img src=./images/salient.png width=40%>
+</div>
+
+### General MLLM
+
+| Fine-tune  | ScienceQA | MM-Bench | Seed-Bench |
+| :--------: | :-------: | :------: | :--------: |
+| u-LLaVA-7B |   87.74   |   soon   |    soon    |
+
+
+
+### Video QA
+
+|  zero-shot  | Accuracy (Type 3) |
+| :---------: | :---------------: |
+| Activity-QA |      51.70%       |
+
+<!-- RESULTS  -->
 
 ## Getting Started
 
