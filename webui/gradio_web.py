@@ -6,7 +6,7 @@ import argparse
 import numpy as np
 import gradio as gr
 from PIL import Image
-# from gradio_chat import Chat
+from gradio_chat import Chat
 from utils.conversation import conversation_lib
 
 
@@ -14,7 +14,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="u-LLaVA Chat")
     parser.add_argument("--llm_path", default="./exp/ullava/stage2_no_detach")
     parser.add_argument("--clip_processor", default="./model_zoo/clip-vit-large-patch14")
-    parser.add_argument("--vis_save_path", default="./vis_output", type=str)
     parser.add_argument("--image_size", default=1024, type=int, help="image size")
     parser.add_argument("--model_max_length", default=512, type=int)
     parser.add_argument("--lora_r", default=-1, type=int)
@@ -30,65 +29,51 @@ def parse_args():
 
 
 args = parse_args()
-# chat = Chat(args)
+chat = Chat(args)
 
 
-def plot_masks(gr_img, pred_masks, gr_gallery):
-    for i, pred_mask in enumerate(pred_masks):
-        if pred_mask.shape[0] == 0:
-            continue
-
-        pred_mask = pred_mask.detach().cpu().numpy()[0]
-        pred_mask = pred_mask > 0
-
-        numpy_img = cv2.cvtColor(np.array(gr_img), cv2.COLOR_RGB2BGR)
-        cv2_img = cv2.cvtColor(numpy_img, cv2.COLOR_BGR2RGB)
-
-        save_img = cv2_img.copy()
-        save_img[pred_mask] = \
-            (cv2_img * 0.5 + pred_mask[:, :, None].astype(np.uint8) * np.array([255, 0, 0]) * 0.5)[pred_mask]
-        save_img = cv2.cvtColor(save_img, cv2.COLOR_RGB2BGR)
-        save_path = './vis_output/mask_img_{0}.jpg'.format(i)
-        cv2.imwrite(save_path, save_img)
-
-        gr_gallery = [Image.fromarray((pred_mask.astype(int) * 255).astype(np.uint8)),
-                      cv2.cvtColor(save_img, cv2.COLOR_BGR2RGB)]
-
-    return save_path, gr_gallery
-
-
-def upload_image(gr_img, chat_state):
-    if gr_img is None:
-        return None, None, gr.update(interactive=True), chat_state
+def gradio_seg(user_message, gr_img, gr_mask, chat_state, chat_bot):
+    if len(user_message) == 0 or gr_img is None:
+        return gr.update(interactive=True, placeholder='Input should not be empty!')
     else:
+        chat_bot = chat_bot + [[user_message, None]]
         chat_state = conversation_lib[args.conv_type].copy()
-        return \
-            gr_img, \
-            gr.update(interactive=True, placeholder='Type and press Enter'), \
-            gr.update(value="Start Chatting", interactive=False), \
-            chat_state
 
+    llm_message, pred_masks = chat.seg(user_message, gr_img, chat_state)
+    gr_mask = pred_masks
+    chat_bot[-1][1] = llm_message
+    print(llm_message)
 
-def gradio_seg(user_message, gr_img, gr_mask, chat_state):
-    # if len(user_message) == 0:
-    #     return gr.update(interactive=True, placeholder='Input should not be empty!')
-    if chat_state is not None:
-        chat_state.messages = []
-
-    if gr_img is not None:
-        # llm_message, pred_masks = chat.seg(user_message, gr_img, chat_state)
-        # gr_mask = pred_masks
-        # print(llm_message)
-        chat_state.messages = []
-
-    return '', gr_mask, chat_state
+    return '', gr_mask, chat_state, chat_bot
 
 
 def gradio_mask(gr_img, gr_mask, gr_gallery):
 
-    save_path, gr_gallery = plot_masks(gr_img, gr_mask, gr_gallery)
+    if gr_mask is None:
+        return []
 
-    return gr_gallery,
+    contain_mask = False
+    for i, pred_mask in enumerate(gr_mask):
+        if pred_mask.shape[0] == 0:
+            continue
+        else:
+            contain_mask = True
+
+            pred_mask = pred_mask.detach().cpu().numpy()[0]
+            pred_mask = pred_mask > 0
+
+            numpy_img = cv2.cvtColor(np.array(gr_img), cv2.COLOR_RGB2BGR)
+            cv2_img = cv2.cvtColor(numpy_img, cv2.COLOR_BGR2RGB)
+
+            save_img = cv2_img.copy()
+            save_img[pred_mask] = \
+                (cv2_img * 0.5 + pred_mask[:, :, None].astype(np.uint8) * np.array([133, 131, 230]) * 0.5)[pred_mask]
+            save_img = cv2.cvtColor(save_img, cv2.COLOR_RGB2BGR)
+
+            gr_gallery = [Image.fromarray((pred_mask.astype(int) * 255).astype(np.uint8)),
+                          cv2.cvtColor(save_img, cv2.COLOR_BGR2RGB)]
+
+    return gr_gallery if contain_mask else []
 
 
 def gradio_reset(chat_state):
@@ -96,11 +81,12 @@ def gradio_reset(chat_state):
         chat_state.messages = []
     return \
         gr.update(value=None, interactive=True), \
-        gr.update(placeholder='Please upload your image/video first', interactive=False), \
-        gr.update(value="Upload & Start Chat", interactive=True), \
+        gr.update(placeholder='Enter Text and press Send', container=False), \
+        gr.update(value="Send", interactive=True), \
         gr.update(value=None), \
         gr.update(value=None), \
-        chat_state
+        chat_state, \
+        gr.update(value=None)
 
 
 def init_demo():
@@ -131,7 +117,7 @@ def init_demo():
     """
 
     text_box = gr.Textbox(label='User',
-                          placeholder='Please upload your image first', interactive=False)
+                          placeholder='Enter Text and press Send', container=False)
 
     with gr.Blocks(title="u-LLaVA", theme=gr.themes.Default(), css=block_css) as demo:
         gr.Markdown(title_markdown)
@@ -139,7 +125,7 @@ def init_demo():
 
         with gr.Row():
             with gr.Column(scale=3):
-                models = ['ullava-7b', 'ullava-7b-lora']
+                models = ['ullava-7b-seg']
                 with gr.Row(elem_id="model_selector_row"):
                     model_selector = gr.Dropdown(
                         choices=models,
@@ -149,10 +135,6 @@ def init_demo():
                         container=False)
 
                 image_box = gr.Image(type="pil")
-                image_process_mode = gr.Radio(
-                    ["Crop", "Resize", "Pad", "Default"],
-                    value="Default",
-                    label="Preprocess for non-square image", visible=False)
 
                 cur_dir = os.path.dirname(os.path.abspath(__file__))
                 gr.Examples(examples=[
@@ -171,10 +153,10 @@ def init_demo():
                 with gr.Row():
                     mask_state = gr.State()
                     chat_state = gr.State()
+                    chat_bot = gr.Chatbot(elem_id="chatbot", label="u-LLaVA Chatbot", height=550)
                     gallery = gr.Gallery(label="Mask images", show_label=False, elem_id="gallery", columns=[2], rows=[1],
                                          object_fit="contain", height=550)
 
-                    chat_bot = gr.Chatbot(elem_id="chatbot", label="u-LLaVA Chatbot", height=550)
                 with gr.Row():
                     with gr.Column(scale=8):
                         text_box.render()
@@ -183,8 +165,8 @@ def init_demo():
                         clear = gr.Button("Restart")
 
         upload_button.click(fn=gradio_seg,
-                            inputs=[text_box, image_box, mask_state, chat_state],
-                            outputs=[text_box, mask_state, chat_state]) \
+                            inputs=[text_box, image_box, mask_state, chat_state, chat_bot],
+                            outputs=[text_box, mask_state, chat_state, chat_bot]) \
             .then(fn=gradio_mask,
                   inputs=[image_box, mask_state, gallery],
                   outputs=[gallery])
@@ -192,7 +174,7 @@ def init_demo():
         clear.click(fn=gradio_reset,
                     inputs=[chat_state],
                     outputs=[image_box, text_box, upload_button,
-                             mask_state, gallery, chat_state],
+                             mask_state, gallery, chat_state, chat_bot],
                     queue=False)
 
     demo.launch(share=True, inbrowser=True)
