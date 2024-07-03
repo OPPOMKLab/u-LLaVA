@@ -30,7 +30,6 @@ def preprocess(
 class Chat:
     def __init__(self, args):
         self.args = args
-        os.makedirs(args.vis_save_path, exist_ok=True)
         self.dtype = torch.float16 if args.dtype == 'fp16' else torch.bfloat16 if args.dtype == 'bf16' else torch.float32
 
         self.tokenizer = LlamaTokenizer.from_pretrained(
