@@ -257,8 +257,9 @@ Note: We have renamed the TGIF dataset and removed invalid samples to facilitate
 | COCO Stuff | [cocostuff][coco_stuff] | [cocostuff.json][ullava_database]  |
 | VOC2010 | [voc2010][voc2010] | [pascal_part.json][ullava_database] |
 | PACO LVIS  | [paco][paco] | [paco_lvis.json][ullava_database] |
-| Salient 15K | coming soon | coming soon |
+| Salient 15K | [msra][msra] | [ullava_salinet_15k.json][salient_15k] |
 
+Note: Please download the images of MSRA-10K and MSRA-B from the official site, thanks the authors for sharing.
 
 
 Dataset config example
@@ -470,4 +471,6 @@ See the [open issues](https://github.com/OPPOMKLab/u-LLaVA/issues) for a full li
 [sam_vit_h]: https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
 [groundingdino_swint_ogc]: https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
 [ullava]:  https://huggingface.co/jinxu95/ullava
+[salient_15k]: https://huggingface.co/datasets/jinxu95/ullava/blob/main/ullava-salient-15k.json
+[msra]: https://mmcheng.net/msra10k/
 
