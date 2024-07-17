@@ -405,7 +405,7 @@ Distributed under the Apache License. See `LICENSE` for more information.
 
 <!-- Citation -->
 
-<!--
+
 
 ## Citation
 
@@ -417,7 +417,7 @@ Distributed under the Apache License. See `LICENSE` for more information.
   year={2024}
 }
 ```
--->
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -449,9 +449,7 @@ We sincerely thank the open source community for their contributions.  And this 
 
 
 
-<!-- 
 See the [open issues](https://github.com/OPPOMKLab/u-LLaVA/issues) for a full list of proposed features (and known issues).
--->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -477,7 +475,3 @@ See the [open issues](https://github.com/OPPOMKLab/u-LLaVA/issues) for a full li
 [ullava]:  https://huggingface.co/jinxu95/ullava
 [salient_15k]: https://huggingface.co/datasets/jinxu95/ullava/blob/main/ullava-salient-15k.json
 [msra]: https://mmcheng.net/msra10k/
-
-
-
-[https://github.com/NExT-ChatV/NExT-Chat]: 
