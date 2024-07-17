@@ -1,11 +1,5 @@
 
 
-[comment]: <> ([![Stargazers][stars-shield]][stars-url])
-
-[comment]: <> ([![Issues][issues-shield]][issues-url])
-
-[comment]: <> ([![MIT License][license-shield]][license-url])
-
 
 
 <!-- PROJECT LOGO -->
@@ -28,19 +22,33 @@
     <br />
     <a href="https://arxiv.org/abs/2311.05348">论文</a>
     ·
-    <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Report Bug</a>
+    <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">反馈Bug</a>
     ·
-    <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Request Feature</a>
+    <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">新特性</a>
   </p>
 
 </div>
 
+## 🎉 News
 
+- **\[2024/07\]** 我们将很快更新[grounding&segmentation版ullava权重][].
+
+- **\[2024/07\]** 336分辨率支持，MM-Bench, TextVQA, SQA, GQA 结果更新.
+
+- **\[2024/07\]** [Salient-15k][salient_15k] 标注文件已更新.
+
+- **\[2024/07\]** 本工作已被**ECAI 2024**接收，感谢所有前序工作！
+
+- **\[2024/01\]** [代码][https://github.com/OPPOMKLab/u-LLaVA/] and [分割版本权重][ullava] 已开源.
+
+- **\[2023/10\]** [论文][https://arxiv.org/abs/2311.05348] 已提交.
+
+  
 
 <!-- TABLE OF CONTENTS -->
 
 <details>
-  <summary>Table of Contents</summary>
+  <summary>目录</summary>
   <ol>
     <li>
       <a href="#about-the-project">关于项目</a>
@@ -62,6 +70,7 @@
     <li><a href="#acknowledgments">致谢</a></li>
   </ol>
 </details>
+
 
 
 
@@ -358,22 +367,22 @@ Distributed under the Apache License. See `LICENSE` for more information.
 
 <!-- Citation -->
 
-## Citation
+## 引用
 
 ```
-@article{xu2023ullava,
+@inproceedings{xu2024ullava,
   title={u-LLaVA: Unifying Multi-Modal Tasks via Large Language Model},
-  author={Xu, Jinjin and Xu, Liwu and Yang, Yuzhe and Li, Xiang and Xie, Yanchun and Huang, Yi-Jie and Li, Yaqian},
-  journal={arXiv preprint arXiv:2311.05348},
-  year={2023}
+  author={Xu, Jinjin and Xu, Liwu and Yang, Yuzhe and Li, Xiang and Wang, Fanyi and Xie, Yanchun and Huang, Yi-Jie and Li, Yaqian},
+  booktitle={Proceedings of the 27th European Conference on Artificial Intelligence},
+  year={2024}
 }
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- TODO -->
-## TODO
+
+## 待办
 
 - [ ] Visual Segmentation
   - [ ] Instance Segmentation
@@ -381,7 +390,7 @@ Distributed under the Apache License. See `LICENSE` for more information.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
+## 致谢
 由衷感谢以下开源工作的贡献，且本工作由上海市白玉兰浦江人才计划支持 (项目编号：23PJ1421800)。
 
 * [LLaVA](https://github.com/haotian-liu/LLaVA)

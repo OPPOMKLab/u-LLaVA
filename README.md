@@ -1,13 +1,5 @@
 
 
-[comment]: <> ([![Stargazers][stars-shield]][stars-url])
-
-[comment]: <> ([![Issues][issues-shield]][issues-url])
-
-[comment]: <> ([![MIT License][license-shield]][license-url])
-
-
-
 <!-- PROJECT LOGO -->
 <br />
 
@@ -22,18 +14,29 @@
     Multi-modal multi task LLM
     <br />
      <a href="https://github.com/OPPOMKLab/u-LLaVA/blob/main/README.md"><strong> Documentation</strong></a>
-<!--       | -->
-<!--     <a href="https://github.com/OPPOMKLab/u-LLaVA/blob/main/README_zh.md"><strong> 中文文档 </strong></a> -->
+       | 
+<a href="https://github.com/OPPOMKLab/u-LLaVA/blob/main/README_zh.md"><strong> 中文文档 </strong></a> 
     <br />
     <br />
-<!--     <a href="https://arxiv.org/abs/2311.05348">Paper</a> -->
+ <a href="https://arxiv.org/abs/2311.05348">Paper</a> 
     ·
-<!--     <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Report Bug</a> -->
+<a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Report Bug</a> 
     ·
-<!--     <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Request Feature</a> -->
+ <a href="https://github.com/OPPOMKLab/u-LLaVA/issues">Request Feature</a>
   </p>
 
 </div>
+
+
+
+## 🎉 News
+
+- **\[2024/07\]** We will release the [grounding&segmentation weights][] soon.
+- **\[2024/07\]** ViT-336 supports, MM-Bench, TextVQA, SQA, GQA involves, coming soon (before Aug).
+- **\[2024/07\]** [Salient-15k][salient_15k] is released.
+- **\[2024/07\]** The work is accepted by **ECAI 2024 Main Track**!
+- **\[2024/01\]** The [code][https://github.com/OPPOMKLab/u-LLaVA/] and [segmentation weights][ullava] are released.
+- **\[2023/10\]** The [paper][https://arxiv.org/abs/2311.05348] is released.
 
 
 
@@ -403,22 +406,23 @@ Distributed under the Apache License. See `LICENSE` for more information.
 <!-- Citation -->
 
 <!--
+
 ## Citation
 
 ```
-@article{xu2023ullava,
+@inproceedings{xu2024ullava,
   title={u-LLaVA: Unifying Multi-Modal Tasks via Large Language Model},
-  author={Xu, Jinjin and Xu, Liwu and Yang, Yuzhe and Li, Xiang and Xie, Yanchun and Huang, Yi-Jie and Li, Yaqian},
-  journal={arXiv preprint arXiv:2311.05348},
-  year={2023}
+  author={Xu, Jinjin and Xu, Liwu and Yang, Yuzhe and Li, Xiang and Wang, Fanyi and Xie, Yanchun and Huang, Yi-Jie and Li, Yaqian},
+  booktitle={Proceedings of the 27th European Conference on Artificial Intelligence},
+  year={2024}
 }
 ```
 -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- TODO -->
+
 ## TODO
 
 - [ ] Visual Segmentation
@@ -427,13 +431,13 @@ Distributed under the Apache License. See `LICENSE` for more information.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
-We sincerely thank the open source community for their contributions. 
-<!-- 
-And this work is sponsored by Shanghai Pujiang Program (23PJ1421800).
--->
+We sincerely thank the open source community for their contributions.  And this work is sponsored by Shanghai Pujiang Program (23PJ1421800).
+
 
 * [LLaVA](https://github.com/haotian-liu/LLaVA)
+* [NExT-Chat](https://github.com/NExT-ChatV/NExT-Chat)
 * [LISA](https://github.com/dvlab-research/LISA)
 * [VideoLLaMA](https://github.com/DAMO-NLP-SG/Video-LLaMA)
 * [Shikra](https://github.com/shikras/shikra)
@@ -474,3 +478,6 @@ See the [open issues](https://github.com/OPPOMKLab/u-LLaVA/issues) for a full li
 [salient_15k]: https://huggingface.co/datasets/jinxu95/ullava/blob/main/ullava-salient-15k.json
 [msra]: https://mmcheng.net/msra10k/
 
+
+
+[https://github.com/NExT-ChatV/NExT-Chat]: 
