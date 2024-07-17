@@ -31,12 +31,12 @@
 
 ## 🎉 News
 
-- **\[2024/07\]** We will release the [grounding&segmentation weights][] soon.
+- **\[2024/07\]** We will release the [grounding&segmentation weights]() soon.
 - **\[2024/07\]** ViT-336 supports, MM-Bench, TextVQA, SQA, GQA involves, coming soon (before Aug).
 - **\[2024/07\]** [Salient-15k][salient_15k] is released.
 - **\[2024/07\]** The work is accepted by **ECAI 2024 Main Track**!
-- **\[2024/01\]** The [code][https://github.com/OPPOMKLab/u-LLaVA/] and [segmentation weights][ullava] are released.
-- **\[2023/10\]** The [paper][https://arxiv.org/abs/2311.05348] is released.
+- **\[2024/01\]** The [code](https://github.com/OPPOMKLab/u-LLaVA/) and [segmentation weights][ullava] are released.
+- **\[2023/10\]** The [paper](https://arxiv.org/abs/2311.05348) is released.
 
 
 
