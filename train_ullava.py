@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import torch
+import pathlib
 import argparse
 import transformers
 from typing import Optional
@@ -24,10 +25,10 @@ from utils.tools import datetime_print
 from utils.config_builder import Config
 from dataclasses import dataclass, field
 from peft import LoraConfig, get_peft_model
-from metrics.meter import AverageMeter, Summary
+from evaluation.tools import AverageMeter, Summary
 from trainers.ullava_trainer import SegmentationTrainer
 from models import UllavaCoreForCausalLM, UllavaForCausalLM, UllavaConfig, \
-    DEFAULT_SEG_TOKEN, DEFAULT_TAG_START, DEFAULT_TAG_END
+    DEFAULT_SEG_TOKEN, DEFAULT_LOC_TOKEN, DEFAULT_TAG_START, DEFAULT_TAG_END
 
 
 @dataclass
@@ -44,6 +45,8 @@ class ModelArguments:
     ce_loss_weight: float = field(default=1.0)
     dice_loss_weight: float = field(default=0.5)
     bce_loss_weight: float = field(default=2.0)
+    l1_loss_weight: float = field(default=1.0)
+    iou_loss_weight: float = field(default=1.0)
     conv_type: str = field(default='conv_sep2')
     image_size: int = field(default=1024)
 
@@ -93,16 +96,17 @@ def find_linear_layers(model, lora_target_modules):
         if (
                 isinstance(module, cls)
                 and all(
-            [
-                x not in name
-                for x in [
-                "visual_model",
-                "vision_encoder",
-                "vision_projector",
-                "text_hidden_fcs",
-            ]
-            ]
-        )
+                [
+                    x not in name
+                    for x in [
+                        "vision_encoder",
+                        "vision_projector",
+                        "seg_projector",
+                        "visual_model",
+                        "det_projector",
+                        "det_decoder"
+                    ]
+                ])
                 and any([x in name for x in lora_target_modules])
         ):
             lora_module_names.add(name)
@@ -149,19 +153,25 @@ def train(config):
         legacy=False
     )
     tokenizer.pad_token = tokenizer.unk_token
-    tokenizer.add_tokens([DEFAULT_SEG_TOKEN, DEFAULT_TAG_START, DEFAULT_TAG_END], special_tokens=True)
-    model_args.seg_token_idx = tokenizer.convert_tokens_to_ids(DEFAULT_SEG_TOKEN)
+    tokenizer.add_tokens([DEFAULT_SEG_TOKEN, DEFAULT_LOC_TOKEN, DEFAULT_TAG_START, DEFAULT_TAG_END], special_tokens=True)
+    seg_token_idx = tokenizer.convert_tokens_to_ids(DEFAULT_SEG_TOKEN)
+    loc_token_idx = tokenizer.convert_tokens_to_ids(DEFAULT_LOC_TOKEN)
 
     base_config = AutoConfig.from_pretrained(model_args.llm_path)
+    # if basic model is from ullava_core, the default value is true
+    base_config.projector_from_scratch = False  # False or True result in similar performance
+
     if base_config.model_type == 'ullava_core':
-        base_config.projector_from_scratch = False  # False or True result in similar performance
         model_config = UllavaConfig(llm_config=base_config.to_dict(),
                                     train_mask_decoder=model_args.train_mask_decoder,
                                     out_dim=model_args.out_dim,
                                     ce_weight=model_args.ce_loss_weight,
                                     bce_weight=model_args.bce_loss_weight,
                                     dice_weight=model_args.dice_loss_weight,
-                                    sep_token_idx=model_args.seg_token_idx)
+                                    l1_weight=model_args.l1_loss_weight,
+                                    iou_weight=model_args.iou_loss_weight,
+                                    seg_token_idx=seg_token_idx,
+                                    loc_token_idx=loc_token_idx)
     elif base_config.model_type == 'ullava':
         model_config = UllavaConfig(**base_config.to_dict())
     else:
@@ -234,16 +244,21 @@ def train(config):
         for p in model.llm.vision_projector.parameters():
             p.requires_grad = True
 
-    # make text_hidden_fcs, mask_decoder, lm_head, embed_tokens trainable
+    # make projectors, mask_decoder, lm_head, embed_tokens trainable
     for n, p in model.named_parameters():
         if any(
                 [
                     x in n
-                    for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs"]
+                    for x in
+                    ["lm_head", "embed_tokens", "seg_projector", "mask_decoder", "det_projector", "det_decoder"]
                 ]
         ):
-            print("n: ", n, "p.shape: ", p.shape)
-            p.requires_grad = True
+            if "mask_decoder.iou_prediction_head" not in n:
+                print("n: ", n, "p.shape: ", p.shape)
+                p.requires_grad = True
+            else:
+                # to avoid unused_parameter error in ddp
+                p.requires_grad = False
 
     task = setup_task(task_args)
     processor_dict = task.build_processors(processor_args)
@@ -265,7 +280,10 @@ def train(config):
         compute_metrics=compute_metrics,
     )
 
-    trainer.train()
+    if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
+        trainer.train(resume_from_checkpoint=True)
+    else:
+        trainer.train()
     trainer.save_state()
 
     if lora_r > 0:
@@ -280,7 +298,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--cfg_path", 
-        default='./configs/train/ullava_stage2_lora.yaml', 
+        default='./configs/train/ullava.yaml',
         help="path to configuration file.")
     parser.add_argument(
         "--options",

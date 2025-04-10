@@ -72,9 +72,10 @@ def train(config):
 
     base_config = AutoConfig.from_pretrained(model_args.llm_path)
     if base_config.model_type == 'llama':
-        # for llama/llama2/vucuna
+        # for llama/llama2/vicuna
         vision_config = CLIPVisionConfig.from_pretrained(model_args.vision_encoder)
         model_config = UllavaCoreConfig(vision_config=vision_config.to_dict(),
+                                        projector_type=model_args.projector_type,
                                         vision_hidden_layer=model_args.vision_hidden_layer,
                                         projector_from_scratch=model_args.projector_from_scratch,
                                         mm_token_ids=None,
@@ -108,7 +109,7 @@ def train(config):
             model=model,
         )
 
-    # add special tokens, can be disable
+    # add special tokens, can disable
     tokenizer.add_special_tokens({
         "eos_token": DEFAULT_EOS_TOKEN,
         "bos_token": DEFAULT_BOS_TOKEN,
@@ -116,7 +117,7 @@ def train(config):
     })
 
     if base_config.model_type == 'llama':
-        # LLaMA model, addvisual tokens, load vision model
+        # LLaMA model, add visual tokens, load vision model
         datetime_print('LLaMA model, Loading CLIP Vision Encoder')
         model.vision_encoder = CLIPVisionModel.from_pretrained(
             model_args.vision_encoder,
@@ -177,7 +178,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Training")
     parser.add_argument(
         "--cfg_path", 
-        default='./configs/train/ullava_core_stage1.yaml', 
+        default='./configs/train/ullava_core.yaml',
         help="path to configuration file.")
     parser.add_argument(
         "--options",

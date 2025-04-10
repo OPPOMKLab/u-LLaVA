@@ -26,15 +26,16 @@ from peft import PeftModel
 from tasks import setup_task
 from utils.config_builder import Config
 from models.ullava import UllavaForCausalLM
-from metrics.mask_iou import intersectionAndUnionGPU
 from train_ullava import ModelArguments, TrainingArguments
-from metrics.meter import AverageMeter, Summary, dict_to_cuda
+from evaluation.tools import intersectionAndUnionGPU, AverageMeter, Summary, dict_to_cuda, bbox_iou
 
 
-def validate(model, val_dataset, data_collator):
+def validate(model, val_dataset, data_collator, dtype):
     intersection_meter = AverageMeter("Intersec", ":6.3f", Summary.SUM)
     union_meter = AverageMeter("Union", ":6.3f", Summary.SUM)
     acc_iou_meter = AverageMeter("gIoU", ":6.3f", Summary.SUM)
+
+    prec05_meter = AverageMeter("Prec@0.5", ":6.3f", Summary.SUM)
 
     model.eval()
     val_loader = torch.utils.data.DataLoader(
@@ -50,13 +51,16 @@ def validate(model, val_dataset, data_collator):
         torch.cuda.empty_cache()
         input_dict['inference'] = True
 
-        input_dict = dict_to_cuda(input_dict)
+        input_dict = dict_to_cuda(input_dict, dtype)
 
         with torch.no_grad():
             output_dict = model(**input_dict)
 
         pred_masks = output_dict["pred_masks"]
         masks_list = output_dict["gt_masks"][0].int()
+
+        pred_boxes = output_dict["pred_boxes"][0]
+        boxes_list = output_dict["gt_boxes"][0]
 
         output_list = (pred_masks[0] > 0).int()
         assert len(pred_masks) == 1
@@ -81,13 +85,21 @@ def validate(model, val_dataset, data_collator):
         union_meter.update(union)
         acc_iou_meter.update(acc_iou, n=masks_list.shape[0])
 
+        for pred_box, gt_box in zip(pred_boxes, boxes_list):
+            res = bbox_iou(pred_box.unsqueeze(0), gt_box.unsqueeze(0))
+            prec05_meter.update(res['accuracy'] * 100.0, res['num'])
+
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10)
     ciou = iou_class[1] * 100.0
     giou = acc_iou_meter.avg[1] * 100.0
+    prec05 = prec05_meter.avg
 
-    print("ciou: {:.2f}, giou: {:.2f}, success: {}".format(ciou, giou, intersection_meter.count))
+    print("ciou: {:.2f}, giou: {:.2f}, prec@0.5: {:.2f} success: {}".format(ciou,
+                                                                            giou,
+                                                                            prec05,
+                                                                            intersection_meter.count))
 
-    return ciou, giou
+    return ciou, giou, prec05
 
 
 def evaluate(config):
@@ -119,10 +131,11 @@ def evaluate(config):
         use_fast=False,
         legacy=False
     )
-    model = UllavaForCausalLM.from_pretrained(model_args.llm_path)
+    dtype = torch.float16 if args.dtype == 'fp16' else torch.bfloat16 if args.dtype == 'bf16' else torch.float32
+    model = UllavaForCausalLM.from_pretrained(model_args.llm_path, torch_dtype=dtype)
 
     if model_args.lora_r > 0:
-        model.llm = PeftModel.from_pretrained(model.llm, model_args.llm_path)
+        model.llm = PeftModel.from_pretrained(model.llm, model_args.llm_path, torch_type=dtype)
 
     task = setup_task(task_args)
     processor_dict = task.build_processors(processor_args)
@@ -136,8 +149,8 @@ def evaluate(config):
     logger.info('Dataset|\tcIoU\tgIoU')
 
     for name, eval_dataset in eval_dict.items():
-        ciou, giou = validate(model, val_dataset=eval_dataset, data_collator=data_collator)
-        logger.info('{0}|\t{1:.2f}|\t{2:.2f}'.format(name, ciou, giou))
+        ciou, giou, prec05 = validate(model, val_dataset=eval_dataset, data_collator=data_collator, dtype=dtype)
+        logger.info('{0}|\t{1:.2f}|\t{2:.2f}\t{3:.3f}'.format(name, ciou, giou, prec05))
 
 
 if __name__ == "__main__":
@@ -145,6 +158,13 @@ if __name__ == "__main__":
 
     parser.add_argument("--cfg_path", default='./configs/eval/eval_salient.yaml', help="path to configuration file.")
     parser.add_argument("--log_dir", default='./logs', help="path to save logs.")
+    parser.add_argument(
+        "--dtype",
+        default="bf16",
+        type=str,
+        choices=["fp32", "bf16", "fp16"],
+        help="precision for inference",
+    )
     parser.add_argument(
         "--options",
         nargs="+",

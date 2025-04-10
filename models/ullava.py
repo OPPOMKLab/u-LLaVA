@@ -7,61 +7,11 @@ import copy
 import torch
 import torch.nn as nn
 from typing import List
-import torch.nn.functional as F
 from utils.registry import registry
 from models.segment_anything import build_sam_vit_h
 from models.ullava_core import UllavaCoreConfig, UllavaCoreForCausalLM
+from models.loss import bbox_l1_loss, bbox_giou_loss, sigmoid_ce_loss, dice_loss
 from transformers import AutoModelForCausalLM, PreTrainedModel, PretrainedConfig, AutoConfig
-
-
-def dice_loss(
-        inputs: torch.Tensor,
-        targets: torch.Tensor,
-        num_masks: float,
-        scale=1000,
-        eps=1e-6,
-):
-    """
-    Compute the DICE loss, similar to generalized IOU for masks
-    Args:
-        inputs: A float tensor of arbitrary shape.
-                The predictions for each example.
-        targets: A float tensor with the same shape as inputs. Stores the binary
-                 classification label for each element in inputs
-                (0 for the negative class and 1 for the positive class).
-        num_masks:
-        scale:
-        eps:
-    """
-    inputs = inputs.sigmoid()
-    inputs = inputs.flatten(1, 2)
-    targets = targets.flatten(1, 2)
-    numerator = 2 * (inputs / scale * targets).sum(-1)
-    denominator = (inputs / scale).sum(-1) + (targets / scale).sum(-1)
-    loss = 1 - (numerator + eps) / (denominator + eps)
-    loss = loss.sum() / (num_masks + 1e-8)
-    return loss
-
-
-def sigmoid_ce_loss(
-        inputs: torch.Tensor,
-        targets: torch.Tensor,
-        num_masks: float,
-):
-    """
-    Args:
-        inputs: A float tensor of arbitrary shape.
-                The predictions for each example.
-        targets: A float tensor with the same shape as inputs. Stores the binary
-                 classification label for each element in inputs
-                (0 for the negative class and 1 for the positive class).
-        num_masks:
-    Returns:
-        Loss tensor
-    """
-    loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
-    loss = loss.flatten(1, 2).mean(1).sum() / (num_masks + 1e-8)
-    return loss
 
 
 class UllavaConfig(PretrainedConfig):
@@ -70,11 +20,14 @@ class UllavaConfig(PretrainedConfig):
 
     def __init__(self,
                  llm_config=None,
-                 ce_weight=0.5,
-                 bce_weight=0.5,
-                 dice_weight=-1,
+                 ce_weight=1.0,
+                 bce_weight=2.0,
+                 dice_weight=0.5,
+                 l1_weight=1.0,
+                 iou_weight=1.0,
                  out_dim=256,
                  seg_token_idx=32007,
+                 loc_token_idx=32008,
                  train_mask_decoder=True,
                  **kwargs
                  ):
@@ -85,7 +38,10 @@ class UllavaConfig(PretrainedConfig):
         self.bce_weight = bce_weight
         self.out_dim = out_dim
         self.dice_weight = dice_weight
+        self.l1_weight = l1_weight
+        self.iou_weight = iou_weight
         self.seg_token_idx = seg_token_idx
+        self.loc_token_idx = loc_token_idx
         self.train_mask_decoder = train_mask_decoder
 
     def to_dict(self):
@@ -100,8 +56,11 @@ class UllavaConfig(PretrainedConfig):
         output["ce_weight"] = self.ce_weight
         output["bce_weight"] = self.bce_weight
         output["dice_weight"] = self.dice_weight
+        output["iou_weight"] = self.iou_weight
+        output["l1_weight"] = self.l1_weight
         output["out_dim"] = self.out_dim
         output["seg_token_idx"] = self.seg_token_idx
+        output["loc_token_idx"] = self.loc_token_idx
         output["train_mask_decoder"] = self.train_mask_decoder
         output["model_type"] = self.__class__.model_type
         return output
@@ -118,9 +77,49 @@ class UllavaForCausalLM(PreTrainedModel):
         llm_config = config.llm_config
         self.llm = UllavaCoreForCausalLM(llm_config)
         # initialize sam and projector without checkpoint
-        self.visual_model, self.text_hidden_fcs = self.init_seg_modules(llm_config.hidden_size)
+        self.seg_projector, self.visual_model = self.init_seg_modules(llm_config.hidden_size)
+        self.det_projector, self.det_decoder = self.init_det_modules(llm_config.hidden_size)
+
+    def init_det_modules(self, hidden_size):
+        # projector
+        in_dim, out_dim = hidden_size, self.config.out_dim
+        projector = nn.Sequential(
+            nn.Linear(in_dim, in_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(in_dim, out_dim),
+            nn.Dropout(0.0),
+        )
+        projector.train()
+        for param in projector.parameters():
+            param.requires_grad = True
+
+        decoder = nn.Sequential(
+            nn.Linear(out_dim, out_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(out_dim, out_dim // 2),
+            nn.ReLU(inplace=True),
+            nn.Linear(out_dim // 2, 4),
+        )
+        decoder.train()
+        for param in decoder.parameters():
+            param.requires_grad = True
+
+        return projector, decoder
 
     def init_seg_modules(self, hidden_size):
+        # Projection layer
+        in_dim = hidden_size
+        out_dim = self.config.out_dim
+        projector = nn.Sequential(
+            nn.Linear(in_dim, in_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(in_dim, out_dim),
+            nn.Dropout(0.0),
+        )
+        projector.train()
+        for param in projector.parameters():
+            param.requires_grad = True
+
         # SAM
         visual_model = build_sam_vit_h(checkpoint=None)
         for param in visual_model.parameters():
@@ -130,20 +129,7 @@ class UllavaForCausalLM(PreTrainedModel):
             for param in visual_model.mask_decoder.parameters():
                 param.requires_grad = True
 
-        # Projection layer
-        in_dim = hidden_size
-        out_dim = self.config.out_dim
-        text_fcs = nn.Sequential(
-            nn.Linear(in_dim, in_dim),
-            nn.ReLU(inplace=True),
-            nn.Linear(in_dim, out_dim),
-            nn.Dropout(0.0),
-        )
-        text_fcs.train()
-        for param in text_fcs.parameters():
-            param.requires_grad = True
-
-        return visual_model, text_fcs
+        return projector, visual_model
 
     def load_visual_checkpoint(self, checkpoint):
         with open(checkpoint, "rb") as f:
@@ -173,16 +159,21 @@ class UllavaForCausalLM(PreTrainedModel):
             mask_list: List[torch.FloatTensor],
             size_list: List[torch.Tensor],
             resize_list: List[tuple],
-            inference: bool = False,
-            **kwargs
+            bbox_list: List[torch.FloatTensor],
+            inference: bool = False
     ):
         batch_size = input_ids.shape[0]
 
         image_embeddings = self.get_visual_embs(images_sam)
         seg_token_mask = input_ids[:, 1:] == self.config.seg_token_idx
+        loc_token_mask = input_ids[:, 1:] == self.config.loc_token_idx
+
         # FIXME: [torch.zeros((seg_token_mask.shape[0], 1)).bool().cuda(), seg_token_mask]
         seg_token_mask = torch.cat(
             [seg_token_mask, torch.zeros((seg_token_mask.shape[0], 1)).bool().cuda()], dim=1,
+        )
+        loc_token_mask = torch.cat(
+            [loc_token_mask, torch.zeros((loc_token_mask.shape[0], 1)).bool().cuda()], dim=1,
         )
 
         output = self.llm.forward(
@@ -195,13 +186,17 @@ class UllavaForCausalLM(PreTrainedModel):
 
         output_hidden_states = output.hidden_states
 
-        last_hidden_state = self.text_hidden_fcs(output_hidden_states[-1])  # [bs, token_len, out_dim]
-
-        # one image paired with several sentences
+        # seg, one image paired with several sentences
+        last_hidden_state = self.seg_projector(output_hidden_states[-1])  # [bs, token_len, out_dim]
         pred_embeddings = last_hidden_state[seg_token_mask]  # [bs * num_sentence, out_dim]
-
         seg_token_counts = seg_token_mask.int().sum(-1)  # [bs]
         seg_token_offset = seg_token_counts.cumsum(-1)  # [bs] e.g., [3, 6, 9, 12, 15, 18, 21]
+
+        # loc
+        last_hidden_state = self.det_projector(output_hidden_states[-1])  # [bs, token_len, out_dim]
+        pred_loc_embeddings = last_hidden_state[loc_token_mask]  # [bs * num_sentence, out_dim]
+        loc_token_counts = loc_token_mask.int().sum(-1)  # [bs]
+        loc_token_offset = loc_token_counts.cumsum(-1)  # [bs] e.g., [3, 6, 9, 12, 15, 18, 21]
 
         # [bs + 1] e.g., [0, 3, 6, 9, 12, 15, 18, 21]
         seg_token_offset = torch.cat(
@@ -210,19 +205,29 @@ class UllavaForCausalLM(PreTrainedModel):
                 seg_token_offset
             ], dim=0
         )
+        loc_token_offset = torch.cat(
+            [
+                torch.zeros(1).long().cuda(),
+                loc_token_offset
+            ], dim=0
+        )
 
-        pred_embeddings_ = []
-        raw_size_list = []
-        resize_size_list = []
+        pred_embeddings_, pred_loc_embeddings_ = [], []
+        raw_size_list, resize_size_list = [], []
         for i in range(batch_size):
+            # get seg embedding
             start_i, end_i = seg_token_offset[i], seg_token_offset[i + 1]
             pred_embeddings_.append(pred_embeddings[start_i:end_i])
+            # get loc embedding
+            start_i, end_i = loc_token_offset[i], loc_token_offset[i + 1]
+            pred_loc_embeddings_.append(pred_loc_embeddings[start_i:end_i])
+
             resize_size_list.append(resize_list[i])
             raw_size_list.append(size_list[i])
-        pred_embeddings = pred_embeddings_
+        pred_embeddings, pred_loc_embeddings = pred_embeddings_, pred_loc_embeddings_
 
         multimask_output = False
-        pred_masks = []
+        pred_masks, pred_boxes = [], []
         for i in range(batch_size):
             sparse_embeddings, dense_embeddings = \
                 self.visual_model.prompt_encoder(
@@ -247,21 +252,36 @@ class UllavaForCausalLM(PreTrainedModel):
             )
             pred_masks.append(pred_mask[:, 0])
 
+            pred_box = self.det_decoder(pred_loc_embeddings[i])
+            pred_boxes.append(pred_box)
+
         gt_masks = mask_list
+        gt_boxes = bbox_list
 
         if inference:
             return {
                 "pred_masks": pred_masks,
+                "pred_boxes": pred_boxes,
                 "gt_masks": gt_masks,
-                'logits': output.logits
+                "gt_boxes": gt_boxes,
+                'logits': output.logits,
             }
 
+        # next word loss
         ce_loss = output.loss
         ce_loss = ce_loss * self.config.ce_weight
         loss = ce_loss
+
+        # mask loss
         mask_bce_loss = 0
         mask_dice_loss = 0
         num_masks = 0
+
+        # box loss
+        box_l1_loss = 0
+        box_giou_loss = 0
+        num_boxes = 0
+
         for batch_idx in range(len(pred_masks)):
             gt_mask = gt_masks[batch_idx]
             pred_mask = pred_masks[batch_idx]
@@ -281,18 +301,35 @@ class UllavaForCausalLM(PreTrainedModel):
             )
             num_masks += gt_mask.shape[0]
 
+            gt_box = gt_boxes[batch_idx]
+            pred_box = pred_boxes[batch_idx]
+            assert (
+                    gt_box.shape[0] == pred_box.shape[0]
+            ), "gt_box.shape: {}, pred_box.shape: {}".format(
+                gt_box.shape, pred_box.shape
+            )
+            box_l1_loss += bbox_l1_loss(pred_box, gt_box, gt_box.shape[0])
+            box_giou_loss += bbox_giou_loss(pred_box, gt_box, gt_box.shape[0])
+            num_boxes += gt_box.shape[0]
+
         mask_bce_loss = self.config.bce_weight * mask_bce_loss / (num_masks + 1e-8)
         mask_dice_loss = self.config.dice_weight * mask_dice_loss / (num_masks + 1e-8)
         mask_loss = mask_bce_loss + mask_dice_loss
 
+        box_l1_loss = self.config.l1_weight * box_l1_loss / (num_boxes + 1e-8)
+        box_giou_loss = self.config.iou_weight * box_giou_loss / (num_boxes + 1e-8)
+        bbox_loss = box_l1_loss + box_giou_loss
+
         loss += mask_loss
+        loss += bbox_loss
 
         return {
             "loss": loss,
             "ce_loss": ce_loss,
             "mask_bce_loss": mask_bce_loss,
             "mask_dice_loss": mask_dice_loss,
-            "mask_loss": mask_loss
+            "mask_loss": mask_loss,
+            "bbox_loss": bbox_loss
         }
 
     def evaluate(
@@ -303,6 +340,10 @@ class UllavaForCausalLM(PreTrainedModel):
             raw_size_list,
             resize_list,
             max_new_tokens=32,
+            temperature=0.2,
+            top_p=None,
+            num_beams=1,
+            no_repeat_ngram_size=None,
             stopping_criteria=None,
     ):
         with torch.inference_mode():
@@ -310,11 +351,13 @@ class UllavaForCausalLM(PreTrainedModel):
                 input_ids=input_ids,
                 images=images,
                 max_new_tokens=max_new_tokens,
-                num_beams=1,
-                # do_sample=True,
-                # temperature=0.2,
+                num_beams=num_beams,
+                top_p=top_p,
+                do_sample=True if temperature > 0 else False,
+                temperature=temperature,
                 output_hidden_states=True,
                 return_dict_in_generate=True,
+                no_repeat_ngram_size=no_repeat_ngram_size,
                 stopping_criteria=stopping_criteria
             )
 
@@ -322,10 +365,9 @@ class UllavaForCausalLM(PreTrainedModel):
             output_ids = outputs.sequences
 
             seg_token_mask = output_ids[:, 1:] == self.config.seg_token_idx
-            # print(output_hidden_states.size(), seg_token_mask.size())
+            loc_token_mask = output_ids[:, 1:] == self.config.loc_token_idx
 
-            last_hidden_state = self.text_hidden_fcs(output_hidden_states[-1])  # [1, token_len, out_dim]
-
+            last_hidden_state = self.seg_projector(output_hidden_states[-1])  # [1, token_len, out_dim]
             pred_embeddings = last_hidden_state[seg_token_mask]
 
             seg_token_counts = seg_token_mask.int().sum(-1)  # [bs, ]
@@ -334,11 +376,25 @@ class UllavaForCausalLM(PreTrainedModel):
                 [torch.zeros(1).long().cuda(), seg_token_offset], dim=0
             )
 
+            last_hidden_state = self.det_projector(output_hidden_states[-1])  # [1, token_len, out_dim]
+            pred_loc_embeddings = last_hidden_state[loc_token_mask]
+            loc_token_counts = loc_token_mask.int().sum(-1)  # [bs, ]
+            loc_token_offset = loc_token_counts.cumsum(-1)
+            loc_token_offset = torch.cat(
+                [torch.zeros(1).long().cuda(), loc_token_offset], dim=0
+            )
+
             pred_embeddings_ = []
             for i in range(len(seg_token_offset) - 1):
                 start_i, end_i = seg_token_offset[i], seg_token_offset[i + 1]
                 pred_embeddings_.append(pred_embeddings[start_i:end_i])
-            pred_embeddings = pred_embeddings_
+
+            pred_loc_embeddings_ = []
+            for i in range(len(loc_token_offset) - 1):
+                start_i, end_i = loc_token_offset[i], loc_token_offset[i + 1]
+                pred_loc_embeddings_.append(pred_loc_embeddings[start_i:end_i])
+
+            pred_embeddings, pred_loc_embeddings = pred_embeddings_, pred_loc_embeddings_
 
             image_embeddings = self.get_visual_embs(images_sam)
 
@@ -370,7 +426,12 @@ class UllavaForCausalLM(PreTrainedModel):
                 )
                 pred_masks.append(pred_mask[:, 0])
 
-        return output_ids, pred_masks
+            pred_boxes = []
+            for pred_loc_embedding in pred_loc_embeddings:
+                pred_box = self.det_decoder(pred_loc_embedding)
+                pred_boxes.append(pred_box)
+
+        return output_ids, pred_masks, pred_boxes
 
 
 AutoConfig.register("ullava", UllavaConfig)

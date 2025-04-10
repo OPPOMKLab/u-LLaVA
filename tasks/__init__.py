@@ -19,9 +19,9 @@ from tasks.base_task import BaseTask
 from tasks.image_text_pretrain import ImageTextPretrainTask
 from tasks.image_text_evaluate import ImageTextEvaluateTask
 # do not delete
-from datasets.builders import *
-from datasets.collators import *
-from datasets.processors import *
+from dataset.builders import *
+from dataset.collators import *
+from dataset.processors import *
 
 
 def setup_task(cfg):

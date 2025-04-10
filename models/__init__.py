@@ -16,7 +16,6 @@ limitations under the License.
 
 from models.ullava import UllavaConfig, UllavaForCausalLM
 from models.ullava_core import UllavaCoreConfig, UllavaCoreForCausalLM
-from models.grounding_module import load_groundingdino_model, GroundingModule
 from models.tools import KeywordsStoppingCriteria, smart_resize_token_embedding, \
     smart_special_token_and_embedding_resize, multi_modal_resize_token_embedding
 
@@ -31,6 +30,7 @@ DEFAULT_VID_START_TOKEN = "<vid_beg>"
 DEFAULT_VID_END_TOKEN = "</vid_end>"
 
 DEFAULT_SEG_TOKEN = '[SEG]'
+DEFAULT_LOC_TOKEN = '[LOC]'
 DEFAULT_TAG_START = '[tag]'
 DEFAULT_TAG_END = '[/tag]'
 
@@ -46,14 +46,13 @@ __all__ = [
     "UllavaForCausalLM",
     "UllavaCoreConfig",
     "UllavaCoreForCausalLM",
-    "GroundingModule",
-    "load_groundingdino_model",
     "KeywordsStoppingCriteria",
     "smart_resize_token_embedding",
     "multi_modal_resize_token_embedding",
     "smart_special_token_and_embedding_resize",
     "DEFAULT_IMG_TOKEN",
     "DEFAULT_SEG_TOKEN",
+    "DEFAULT_LOC_TOKEN",
     "DEFAULT_IMG_PATCH_TOKEN",
     "DEFAULT_IMG_START_TOKEN",
     "DEFAULT_IMG_END_TOKEN",

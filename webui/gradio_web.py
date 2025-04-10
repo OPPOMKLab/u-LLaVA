@@ -12,12 +12,15 @@ from utils.conversation import conversation_lib
 
 def parse_args():
     parser = argparse.ArgumentParser(description="u-LLaVA Chat")
-    parser.add_argument("--llm_path", default="./exp/ullava/stage2_no_detach")
+    parser.add_argument("--llm_path", default="./exp/ullava")
     parser.add_argument("--clip_processor", default="./model_zoo/clip-vit-large-patch14")
-    parser.add_argument("--image_size", default=1024, type=int, help="image size")
     parser.add_argument("--model_max_length", default=512, type=int)
     parser.add_argument("--lora_r", default=-1, type=int)
     parser.add_argument("--conv_type", default='conv_sep2', type=str)
+    parser.add_argument(
+        "--aspect_ratio", default="pad",
+        type=str
+    )
     parser.add_argument(
         "--dtype",
         default="bf16",
@@ -32,35 +35,39 @@ args = parse_args()
 chat = Chat(args)
 
 
-def gradio_seg(user_message, gr_img, gr_mask, chat_state, chat_bot):
+def inference(user_message, gr_img, gr_mask, gr_bbox, chat_state, chat_bot):
     if len(user_message) == 0 or gr_img is None:
         return gr.update(interactive=True, placeholder='Input should not be empty!')
     else:
         chat_bot = chat_bot + [[user_message, None]]
         chat_state = conversation_lib[args.conv_type].copy()
 
-    llm_message, pred_masks = chat.seg(user_message, gr_img, chat_state)
+    llm_message, pred_masks, pred_boxes = chat.seg(user_message, gr_img, chat_state)
     gr_mask = pred_masks
+    gr_bbox = pred_boxes
     chat_bot[-1][1] = llm_message
     print(llm_message)
 
-    return '', gr_mask, chat_state, chat_bot
+    return '', gr_mask, gr_bbox, chat_state, chat_bot
 
 
-def gradio_mask(gr_img, gr_mask, gr_gallery):
+def gradio_mask(gr_img, gr_mask, gr_bbox, gr_gallery):
 
     if gr_mask is None:
         return []
 
     contain_mask = False
-    for i, pred_mask in enumerate(gr_mask):
-        if pred_mask.shape[0] == 0:
+    for i, (pred_mask, pred_bbox) in enumerate(zip(gr_mask, gr_bbox)):
+        if pred_mask.shape[0] == 0 or pred_bbox.shape[0] == 0:
             continue
         else:
             contain_mask = True
 
             pred_mask = pred_mask.detach().cpu().numpy()[0]
             pred_mask = pred_mask > 0
+
+            pred_bbox = pred_bbox[0].detach().cpu()
+            pred_bbox = torch.tensor(det_tool.denormalize_padded_xyxy(pred_bbox, width, height)).unsqueeze(0)
 
             numpy_img = cv2.cvtColor(np.array(gr_img), cv2.COLOR_RGB2BGR)
             cv2_img = cv2.cvtColor(numpy_img, cv2.COLOR_BGR2RGB)
@@ -152,6 +159,7 @@ def init_demo():
             with gr.Column(scale=8):
                 with gr.Row():
                     mask_state = gr.State()
+                    bbox_state = gr.State()
                     chat_state = gr.State()
                     chat_bot = gr.Chatbot(elem_id="chatbot", label="u-LLaVA Chatbot", height=550)
                     gallery = gr.Gallery(label="Mask images", show_label=False, elem_id="gallery", columns=[2], rows=[1],
@@ -164,11 +172,11 @@ def init_demo():
                         upload_button = gr.Button(value="Send", variant="primary")
                         clear = gr.Button("Restart")
 
-        upload_button.click(fn=gradio_seg,
-                            inputs=[text_box, image_box, mask_state, chat_state, chat_bot],
-                            outputs=[text_box, mask_state, chat_state, chat_bot]) \
+        upload_button.click(fn=inference,
+                            inputs=[text_box, image_box, mask_state, bbox_state, chat_state, chat_bot],
+                            outputs=[text_box, mask_state, bbox_state, chat_state, chat_bot]) \
             .then(fn=gradio_mask,
-                  inputs=[image_box, mask_state, gallery],
+                  inputs=[image_box, mask_state, bbox_state, gallery],
                   outputs=[gallery])
 
         clear.click(fn=gradio_reset,

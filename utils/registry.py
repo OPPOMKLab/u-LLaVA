@@ -31,7 +31,7 @@ class Registry:
         """
 
         def wrap(builder_cls):
-            from datasets.builders.base_builder import BaseDatasetBuilder
+            from dataset.builders.base_builder import BaseDatasetBuilder
 
             assert issubclass(
                 builder_cls, BaseDatasetBuilder

@@ -5,7 +5,7 @@ Partially Adapted form: https://github.com/DAMO-NLP-SG/Video-LLaMA/blob/main/vid
 from utils.registry import registry
 from tasks.base_task import BaseTask
 from utils.tools import datetime_print
-from datasets.datasets.concat_dataset import ConcatDataset, ConcatDatasetWithShuffle
+from dataset.datasets.concat_dataset import ConcatDataset, ConcatDatasetWithShuffle
 
 
 @registry.register_task("image_text_pretrain")

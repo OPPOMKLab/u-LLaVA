@@ -18,7 +18,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 from transformers import Trainer
-from metrics.mask_iou import intersectionAndUnionGPU
+from evaluation.tools import intersectionAndUnionGPU
 from typing import Dict, Union, Any, Optional, List, Tuple
 
 

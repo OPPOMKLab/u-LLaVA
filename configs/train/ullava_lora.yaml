@@ -1,0 +1,162 @@
+model:
+  arch: 'ullava'
+  llm_path: './exp/ullava/ullava_stage1'
+  sam_pretrained: './model_zoo/sam_h/sam_vit_h_4b8939.pth'
+  conv_type: 'conv_sep2'
+  lora_r: 8
+
+task:
+  type: image_text_pretrain
+  collator_type: 'grounding_collator'
+
+processor:
+  clip_image:
+    path: './model_zoo/clip-vit-large-patch14'
+    image_size: 224
+    aspect_ratio: 'pad'
+
+dataset:
+  llava_seg:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/llava_instruct/llava_instruct_150k.json'
+      image_dir: './dataset_zoo/coco2017/train2017'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcoco+:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcoco+_train.json'
+      image_dir: './dataset_zoo/coco2014'
+      template_root: './datasets/templates/SEG.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcoco:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcoco_train.json'
+      image_dir: './dataset_zoo/coco2014'
+      template_root: './datasets/templates/SEG.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refcocog:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcocog_train.json'
+      image_dir: './dataset_zoo/coco2014'
+      template_root: './datasets/templates/SEG.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  refclef:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refclef_train.json'
+      image_dir: './dataset_zoo/saiapr_tc-12'
+      template_root: './datasets/templates/SEG.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  ade20k:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/ade20k.json'
+      image_dir: './dataset_zoo/ade20k'
+      template_root: './datasets/templates/SEG.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  cocostuff:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/cocostuff.json'
+      image_dir: './dataset_zoo'
+      template_root: './datasets/templates/SEG.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  pascal_part:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/pascal_part.json'
+      image_dir: './dataset_zoo/vlpart'
+      template_root: './datasets/templates/SEG.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  paco_lvis:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/paco_lvis.json'
+      image_dir: './dataset_zoo/coco2017'
+      template_root: './datasets/templates/SEG.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  msra_10k:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/MSRA-10K.json'
+      image_dir: './dataset_zoo'
+      template_root: './datasets/templates/SS.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+  msra_b:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/MSRA-B.json'
+      image_dir: './dataset_zoo'
+      template_root: './datasets/templates/SS.json'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+eval_dataset:
+  refcoco_val:
+    data_type: 'image'
+    image_token_len: 256
+    build_info:
+      anno_dir: './dataset_zoo/ullava/refcoco_val.json'
+      image_dir: './dataset_zoo/coco2014'
+      portion: 1.0
+    vis_processor: 'clip_image'
+
+training:
+  deepspeed: './configs/deepspeed/bf16_zero2.json'
+  output_dir: './exp/ullava/ullava_stage2_lora'
+  learning_rate: 2e-4
+  remove_unused_columns: false
+  model_max_length: 512
+  disable_tqdm: false
+  fp16: false
+  bf16: true
+  tf32: false
+  per_device_train_batch_size: 32
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 1
+  num_train_epochs: 5
+  evaluation_strategy: 'epoch'
+  save_strategy: 'steps'
+  save_steps: 5000
+  save_total_limit: 1
+  weight_decay: 0.
+  warmup_ratio: 0.03
+  lr_scheduler_type: 'cosine'
+  logging_steps: 1
+  dataloader_num_workers: 8
+  gradient_checkpointing: false
+  seed: 42

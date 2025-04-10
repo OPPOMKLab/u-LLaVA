@@ -1,30 +1,12 @@
 import os
 import torch
 import numpy as np
-import torch.nn.functional as F
 from transformers import LlamaTokenizer
 from utils.conversation import SeparatorStyle
-from datasets.processors.clip_processor import CLIPProcessor
-from models.segment_anything.utils.transforms import ResizeLongestSide
+from dataset.processors.clip_processor import CLIPProcessor
+from dataset.tools.mask_toolbox import DetToolBox, SegToolBox
 from models import UllavaForCausalLM, KeywordsStoppingCriteria, DEFAULT_IMG_END_TOKEN,\
     DEFAULT_IMG_START_TOKEN, DEFAULT_IMG_TOKEN, DEFAULT_IMG_PATCH_TOKEN
-
-
-def preprocess(
-        x,
-        pixel_mean=torch.Tensor([123.675, 116.28, 103.53]).view(-1, 1, 1),
-        pixel_std=torch.Tensor([58.395, 57.12, 57.375]).view(-1, 1, 1),
-        img_size=1024,
-) -> torch.Tensor:
-    """Normalize pixel values and pad to a square input."""
-    # Normalize colors
-    x = (x - pixel_mean) / pixel_std
-    # Pad
-    h, w = x.shape[-2:]
-    padh = img_size - h
-    padw = img_size - w
-    x = F.pad(x, (0, padw, 0, padh))
-    return x
 
 
 class Chat:
@@ -47,9 +29,10 @@ class Chat:
         )
 
         self.model = self.model.cuda()
+        self.seg_tool = SegToolBox()
+        self.det_tool = DetToolBox()
 
-        self.clip_image_processor = CLIPProcessor(args.clip_processor)
-        self.transform = ResizeLongestSide(args.image_size)
+        self.clip_image_processor = CLIPProcessor(args.clip_processor, args.aspect_ratio)
         self.model_max_length = args.model_max_length
 
     def seg(self, user_message, pil_img, conv):
@@ -69,10 +52,11 @@ class Chat:
         raw_size_list = [image_np.shape[:2]]
         image_clip = self.clip_image_processor(image_np).unsqueeze(0).cuda().to(self.dtype)
 
-        image = self.transform.apply_image(image_np)
+        image = self.seg_tool.apply_image(image_np)
         resize_list = [image.shape[:2]]
 
-        image = preprocess(torch.from_numpy(image).permute(2, 0, 1).contiguous()).unsqueeze(0).cuda().to(self.dtype)
+        image = self.seg_tool.preprocess(
+            torch.from_numpy(image).permute(2, 0, 1).contiguous()).unsqueeze(0).cuda().to(self.dtype)
 
         input_ids = self.tokenizer(prompt).input_ids
         input_ids = torch.LongTensor(input_ids).unsqueeze(0).cuda()
@@ -81,7 +65,7 @@ class Chat:
         keywords = [stop_str]
         stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, input_ids)
 
-        output_ids, pred_masks = self.model.evaluate(
+        output_ids, pred_masks, pred_boxes = self.model.evaluate(
             image,
             image_clip,
             input_ids,
@@ -96,5 +80,5 @@ class Chat:
             print(f'[Warning] {n_diff_input_output} output_ids are not the same as the input_ids')
         text_output = self.tokenizer.batch_decode(output_ids[:, input_token_len:], skip_special_tokens=True)[0]
 
-        return text_output, pred_masks
+        return text_output, pred_masks, pred_boxes
 

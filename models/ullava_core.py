@@ -44,6 +44,7 @@ class UllavaCoreConfig(LlamaConfig):
     def __init__(self,
                  vision_config=None,
                  vision_hidden_layer=-1,
+                 projector_type='mlp',
                  projector_from_scratch=True,
                  mm_token_ids=None,
                  **kwargs
@@ -52,6 +53,7 @@ class UllavaCoreConfig(LlamaConfig):
 
         self.vision_hidden_layer = vision_hidden_layer
         self.mm_token_ids = mm_token_ids
+        self.projector_type = projector_type
         self.projector_from_scratch = projector_from_scratch
 
         self.vision_config = CLIPVisionConfig(**vision_config) if vision_config else {}
@@ -67,6 +69,7 @@ class UllavaCoreConfig(LlamaConfig):
         output["vision_config"] = self.vision_config.to_dict() if self.vision_config else {}
         output["vision_hidden_layer"] = self.vision_hidden_layer
         output["mm_token_ids"] = self.mm_token_ids
+        output["projector_type"] = self.projector_type
         output["projector_from_scratch"] = self.projector_from_scratch
         output["model_type"] = self.__class__.model_type
         return output
@@ -80,12 +83,11 @@ class UllavaCoreForCausalLM(LlamaForCausalLM):
         """
         keep the same structure with LlamaForCausalLM: model + lm_head
         :param config:
-            Evallama2Config:
-                -llm_config
+            UllavaCoreConfig:
                 -vision_config
                 -vision_hidden_layer
 
-        EvaLLaMA^2:
+        UllavaCore:
             causal_llm:
                 model (LlamaModel)
                 lm_head (MLP)
@@ -101,7 +103,9 @@ class UllavaCoreForCausalLM(LlamaForCausalLM):
 
         self.vision_encoder = CLIPVisionModel(config.vision_config)
         # projector from vision to LLM space: [1024, 4096]
-        self.vision_projector = nn.Linear(config.vision_config.hidden_size, config.hidden_size)
+        self.vision_projector = self.build_vision_projector(config.vision_config.hidden_size,
+                                                            config.hidden_size,
+                                                            config.projector_type)
 
         self.vision_hidden_layer = config.vision_hidden_layer
         self.projector_from_scratch = config.projector_from_scratch
@@ -109,6 +113,20 @@ class UllavaCoreForCausalLM(LlamaForCausalLM):
 
         # Initialize weights and apply final processing
         self.post_init()
+
+    @staticmethod
+    def build_vision_projector(in_dim, hidden_dim, name='mlp'):
+        if name == 'mlp':
+            vision_projector = nn.Linear(in_dim, hidden_dim)
+        elif name == 'mlp2x':
+            vision_projector = nn.Sequential(
+                nn.Linear(in_dim, hidden_dim),
+                nn.GELU(),
+                nn.Linear(hidden_dim, hidden_dim)
+            )
+        else:
+            raise NotImplementedError
+        return vision_projector
 
     def get_input_embeddings(self) -> nn.Module:
         return self.model.embed_tokens
@@ -194,7 +212,7 @@ class UllavaCoreForCausalLM(LlamaForCausalLM):
 
             if num_img_start == 0 and num_vid_start == 0:
                 # if there are only texts in batch, for example SQA and Alpaca
-                # if do not set this, will cause NCCL timeout (CUDA error)
+                # if not set this, will cause NCCL timeout (CUDA error)
                 dummy_image_features = torch.zeros(256, 1024, device=inputs_embeds.device,
                                                    dtype=inputs_embeds.dtype)
                 dummy_image_features = self.vision_projector(dummy_image_features)  # [bs, num_patch=16*16, 4096]
@@ -221,7 +239,7 @@ class UllavaCoreForCausalLM(LlamaForCausalLM):
                                                       cur_input_embeds[img_start_pos + num_patch + 2:].detach()),
                                                      dim=0)
                 else:
-                    # Fintuning stage, train LLM and visual projector, all embeddings shoule be trained
+                    # Fine-tuning stage, train LLM and visual projector, all embeddings should be trained
                     cur_new_input_embeds = torch.cat((cur_input_embeds[:img_start_pos + 1],
                                                       cur_image_features,
                                                       cur_input_embeds[img_start_pos + num_patch + 1:]), dim=0)

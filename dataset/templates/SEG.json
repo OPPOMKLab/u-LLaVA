@@ -1,0 +1,11 @@
+[
+    "<image> Can you segment and locate the <class> in this image?",
+    "<image> Please segment and locate the <class> in this image.",
+    "<image> What is <class> in this image? Please respond with segmentation mask and the bounding box.",
+    "<image> What is <class> in this image? Please output mask and bbox.",
+    "<image> Find the <class> in the picture.",
+    "<image> Can you help me to find the <class> in the image?",
+    "<image> Output the mask and bounding box (bbox) of the <class> in the image?",
+    "<image> Look at the image, segment and locate the <class> in the picture.",
+    "<image> Where is <class>?"
+]
